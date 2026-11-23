@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { crearProducto } from '../services/productoService'
 
-export function ProductoForm() {
+interface ProductoFormProps {
+  onProductoCreado?: () => void
+}
+
+export function ProductoForm({ onProductoCreado }: ProductoFormProps) {
   const [nombre, setNombre] = useState('')
   const [precio, setPrecio] = useState('')
   const [stock, setStock] = useState('')
@@ -24,6 +28,7 @@ export function ProductoForm() {
       setPrecio('')
       setStock('')
       setMensaje('Producto guardado correctamente.')
+      onProductoCreado?.()
     } catch (error) {
       console.error('Error al agregar producto: ', error)
       setMensaje('Error al guardar el producto.')
@@ -33,8 +38,8 @@ export function ProductoForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div>
+    <form className="card-form" onSubmit={handleSubmit}>
+      <div className="form-group">
         <label htmlFor="nombre">Nombre:</label>
         <input
           type="text"
@@ -44,7 +49,7 @@ export function ProductoForm() {
           required
         />
       </div>
-      <div>
+      <div className="form-group">
         <label htmlFor="precio">Precio:</label>
         <input
           type="number"
@@ -55,7 +60,7 @@ export function ProductoForm() {
           required
         />
       </div>
-      <div>
+      <div className="form-group">
         <label htmlFor="stock">Stock:</label>
         <input
           type="number"
@@ -65,10 +70,10 @@ export function ProductoForm() {
           required
         />
       </div>
-      <button type="submit" disabled={guardando}>
+      <button className="btn-guardar" type="submit" disabled={guardando}>
         {guardando ? 'Guardando...' : 'Guardar'}
       </button>
-      {mensaje && <p>{mensaje}</p>}
+      {mensaje && <p className="mensaje-estado">{mensaje}</p>}
     </form>
   )
 }
