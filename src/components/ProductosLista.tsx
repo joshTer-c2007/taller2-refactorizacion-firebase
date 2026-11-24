@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  obtenerProductos,
+  escucharProductos,
   eliminarProducto,
   type Producto
 } from '../services/productoService'
@@ -10,35 +10,36 @@ interface Props {
   refreshKey?: number
 }
 
-export function ProductoLista({ onEdit, refreshKey }: Props) {
+export function ProductoLista({ onEdit }: Props) {
   const [productos, setProductos] = useState<Producto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [eliminandoId, setEliminandoId] = useState<string | null>(null)
 
   useEffect(() => {
-    const cargarProductos = async () => {
-      setCargando(true)
-      setError('')
-      try {
-        const data = await obtenerProductos()
+    setCargando(true)
+    setError('')
+
+    const unsubscribe = escucharProductos(
+      (data) => {
         setProductos(data)
-      } catch (err) {
-        console.error('Error al obtener productos:', err)
-        setError('No se pudieron cargar los productos.')
-      } finally {
+        setCargando(false)
+      },
+      () => {
+        setError('No se pudieron sincronizar los productos.')
         setCargando(false)
       }
-    }
+    )
 
-    cargarProductos()
-  }, [refreshKey])
+    return () => {
+      unsubscribe()
+    }
+  }, [])
 
   const handleEliminar = async (id: string) => {
     try {
       setEliminandoId(id)
       await eliminarProducto(id)
-      setProductos((prev) => prev.filter((producto) => producto.id !== id))
     } catch (err) {
       console.error('Error al eliminar producto:', err)
       setError('No se pudo eliminar el producto.')
