@@ -1,4 +1,4 @@
-import { collection, addDoc, getDocs, updateDoc, doc } from 'firebase/firestore'
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 
 export interface Producto {
@@ -46,4 +46,9 @@ export const actualizarProducto = async (
     precio,
     stock
   })
+}
+
+export const eliminarProducto = async (id: string): Promise<void> => {
+  const productoRef = doc(db, 'productos', id)
+  await deleteDoc(productoRef)
 }

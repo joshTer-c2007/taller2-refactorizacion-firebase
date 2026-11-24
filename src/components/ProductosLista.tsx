@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
-import { obtenerProductos, type Producto } from '../services/productoService'
+import {
+  obtenerProductos,
+  eliminarProducto,
+  type Producto
+} from '../services/productoService'
 
 interface Props {
   onEdit?: (producto: Producto) => void
@@ -10,6 +14,7 @@ export function ProductoLista({ onEdit, refreshKey }: Props) {
   const [productos, setProductos] = useState<Producto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [eliminandoId, setEliminandoId] = useState<string | null>(null)
 
   useEffect(() => {
     const cargarProductos = async () => {
@@ -28,6 +33,19 @@ export function ProductoLista({ onEdit, refreshKey }: Props) {
 
     cargarProductos()
   }, [refreshKey])
+
+  const handleEliminar = async (id: string) => {
+    try {
+      setEliminandoId(id)
+      await eliminarProducto(id)
+      setProductos((prev) => prev.filter((producto) => producto.id !== id))
+    } catch (err) {
+      console.error('Error al eliminar producto:', err)
+      setError('No se pudo eliminar el producto.')
+    } finally {
+      setEliminandoId(null)
+    }
+  }
 
   if (cargando) {
     return (
@@ -72,6 +90,13 @@ export function ProductoLista({ onEdit, refreshKey }: Props) {
                     onClick={() => onEdit && onEdit(producto)}
                   >
                     Editar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleEliminar(producto.id)}
+                    disabled={eliminandoId === producto.id}
+                  >
+                    {eliminandoId === producto.id ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </td>
               </tr>
