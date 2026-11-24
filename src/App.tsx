@@ -1,12 +1,15 @@
 import { useState } from 'react'
 import { ProductoForm } from './components/ProductoForm'
-import { ProductosLista } from './components/ProductosLista'
+import { ProductoLista } from './components/ProductosLista'
+import type { Producto } from './services/productoService'
 import './App.css'
 
 function App() {
+  const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
-  const handleProductoCreado = () => {
+  const handleProductoGuardado = () => {
+    setProductoSeleccionado(null)
     setRefreshKey((prev) => prev + 1)
   }
 
@@ -16,8 +19,17 @@ function App() {
         <h1>Registro y Lista de Productos</h1>
         <p>Gestiona tu inventario conectado a Cloud Firestore</p>
       </header>
-      <ProductoForm onProductoCreado={handleProductoCreado} />
-      <ProductosLista refreshKey={refreshKey} />
+
+      <ProductoForm
+        productoSeleccionado={productoSeleccionado}
+        onProductoGuardado={handleProductoGuardado}
+        onCancelarEdicion={() => setProductoSeleccionado(null)}
+      />
+
+      <ProductoLista
+        onEdit={setProductoSeleccionado}
+        refreshKey={refreshKey}
+      />
     </main>
   )
 }

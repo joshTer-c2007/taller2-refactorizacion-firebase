@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { obtenerProductos, type Producto } from '../services/productoService'
 
-interface ProductosListaProps {
+interface Props {
+  onEdit?: (producto: Producto) => void
   refreshKey?: number
 }
 
-export function ProductosLista({ refreshKey = 0 }: ProductosListaProps) {
+export function ProductoLista({ onEdit, refreshKey }: Props) {
   const [productos, setProductos] = useState<Producto[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -18,7 +19,7 @@ export function ProductosLista({ refreshKey = 0 }: ProductosListaProps) {
         const data = await obtenerProductos()
         setProductos(data)
       } catch (err) {
-        console.error('Error al obtener productos: ', err)
+        console.error('Error al obtener productos:', err)
         setError('No se pudieron cargar los productos.')
       } finally {
         setCargando(false)
@@ -56,6 +57,7 @@ export function ProductosLista({ refreshKey = 0 }: ProductosListaProps) {
               <th>Nombre</th>
               <th>Precio</th>
               <th>Stock</th>
+              <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -64,6 +66,14 @@ export function ProductosLista({ refreshKey = 0 }: ProductosListaProps) {
                 <td>{producto.nombre}</td>
                 <td>${producto.precio}</td>
                 <td>{producto.stock}</td>
+                <td>
+                  <button
+                    type="button"
+                    onClick={() => onEdit && onEdit(producto)}
+                  >
+                    Editar
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>

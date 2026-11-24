@@ -1,79 +1,107 @@
-import { useState } from 'react'
-import { crearProducto } from '../services/productoService'
+import { useState, useEffect } from 'react'
+import { crearProducto, actualizarProducto, type Producto } from '../services/productoService'
 
-interface ProductoFormProps {
-  onProductoCreado?: () => void
+interface Props {
+  productoSeleccionado: Producto | null
+  onProductoGuardado: () => void
+  onCancelarEdicion: () => void
 }
 
-export function ProductoForm({ onProductoCreado }: ProductoFormProps) {
+export function ProductoForm({
+  productoSeleccionado,
+  onProductoGuardado,
+  onCancelarEdicion,
+}: Props) {
   const [nombre, setNombre] = useState('')
   const [precio, setPrecio] = useState('')
   const [stock, setStock] = useState('')
   const [guardando, setGuardando] = useState(false)
-  const [mensaje, setMensaje] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setMensaje('')
-    setGuardando(true)
-
-    try {
-      const id = await crearProducto(
-        nombre.trim(),
-        parseFloat(precio),
-        parseInt(stock, 10)
-      )
-      console.log('Producto agregado con ID: ', id)
+  useEffect(() => {
+    if (productoSeleccionado) {
+      setNombre(productoSeleccionado.nombre)
+      setPrecio(String(productoSeleccionado.precio))
+      setStock(String(productoSeleccionado.stock))
+    } else {
       setNombre('')
       setPrecio('')
       setStock('')
-      setMensaje('Producto guardado correctamente.')
-      onProductoCreado?.()
-    } catch (error) {
-      console.error('Error al agregar producto: ', error)
-      setMensaje('Error al guardar el producto.')
+    }
+  }, [productoSeleccionado])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setGuardando(true)
+
+    try {
+      const nombreLimpio = nombre.trim()
+      const precioNum = Number(precio)
+      const stockNum = Number(stock)
+
+      if (productoSeleccionado) {
+        await actualizarProducto(
+          productoSeleccionado.id,
+          nombreLimpio,
+          precioNum,
+          stockNum
+        )
+      } else {
+        await crearProducto(nombreLimpio, precioNum, stockNum)
+      }
+
+      setNombre('')
+      setPrecio('')
+      setStock('')
+      onProductoGuardado()
     } finally {
       setGuardando(false)
     }
   }
 
   return (
-    <form className="card-form" onSubmit={handleSubmit}>
-      <div className="form-group">
-        <label htmlFor="nombre">Nombre:</label>
-        <input
-          type="text"
-          id="nombre"
-          value={nombre}
-          onChange={(e) => setNombre(e.target.value)}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="precio">Precio:</label>
-        <input
-          type="number"
-          id="precio"
-          step="any"
-          value={precio}
-          onChange={(e) => setPrecio(e.target.value)}
-          required
-        />
-      </div>
-      <div className="form-group">
-        <label htmlFor="stock">Stock:</label>
-        <input
-          type="number"
-          id="stock"
-          value={stock}
-          onChange={(e) => setStock(e.target.value)}
-          required
-        />
-      </div>
-      <button className="btn-guardar" type="submit" disabled={guardando}>
-        {guardando ? 'Guardando...' : 'Guardar'}
+    <form onSubmit={handleSubmit} className="producto-form">
+      <h2>{productoSeleccionado ? 'Editar Producto (UPDATE)' : 'Nuevo Producto (CREATE)'}</h2>
+
+      <input
+        type="text"
+        placeholder="Nombre"
+        value={nombre}
+        onChange={(e) => setNombre(e.target.value)}
+        required
+      />
+
+      <input
+        type="number"
+        placeholder="Precio"
+        value={precio}
+        onChange={(e) => setPrecio(e.target.value)}
+        min="0"
+        step="any"
+        required
+      />
+
+      <input
+        type="number"
+        placeholder="Stock"
+        value={stock}
+        onChange={(e) => setStock(e.target.value)}
+        min="0"
+        required
+      />
+
+      <button type="submit" disabled={guardando}>
+        {guardando
+          ? 'Guardando...'
+          : productoSeleccionado
+          ? 'Actualizar'
+          : 'Crear'}
       </button>
-      {mensaje && <p className="mensaje-estado">{mensaje}</p>}
+
+      {productoSeleccionado && (
+        <button type="button" onClick={onCancelarEdicion} disabled={guardando}>
+          Cancelar
+        </button>
+      )}
     </form>
   )
 }
